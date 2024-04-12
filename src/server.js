@@ -1,5 +1,15 @@
 const express = require("express");
+const mysql = require("mysql");
 const app = express();
+
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "",
+});
+
+db.connect();
+
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
