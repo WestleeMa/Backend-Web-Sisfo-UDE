@@ -6,9 +6,16 @@ const db = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "",
+  database: "db_sisfo_ude",
 });
 
-db.connect();
+db.connect((err) => {
+  if (err) {
+    throw err;
+  } else {
+    console.log("Connected Sucessfully");
+  }
+});
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
