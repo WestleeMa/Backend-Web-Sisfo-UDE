@@ -2,16 +2,9 @@ const db = require("../connect.js");
 const express = require("express");
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  const query = "SELECT * FROM infos";
-  db.query(query, (err, result) => {
-    if (err) {
-      throw err;
-    } else {
-      console.log(result[0]);
-      res.send(result[0]);
-    }
-  });
+router.get("/", async (req, res) => {
+  const resQuery = await db.select().from("infos");
+  res.send(resQuery[0]);
 });
 
 module.exports = router;
