@@ -9,7 +9,7 @@ app.use((req, res, next) => {
 });
 app.get("/", (req, res) => {
   console.log("test");
-  res.json({ a: "a" });
+  res.json({ a: "Selamat datang" });
 });
 
 const userRouter = require("./routes/infos");
