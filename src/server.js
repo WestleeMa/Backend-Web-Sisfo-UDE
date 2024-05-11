@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express();
+const session = require("express-session");
+const bodyParser = require("body-parser");
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
@@ -7,13 +9,21 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   next();
 });
+app.use(
+  session({
+    secret: "secret",
+    resave: true,
+    saveUninitialized: true,
+  })
+);
+app.use(bodyParser.json());
 app.get("/", (req, res) => {
   console.log("test");
-  res.json({ a: "Selamat datang" });
+  res.json({ halo: "Selamat datang" });
 });
 
-const userRouter = require("./routes/infos");
+const Router = require("./routes/route");
 
-app.use("/info", userRouter);
+app.use("/", Router);
 
 app.listen(5000);
