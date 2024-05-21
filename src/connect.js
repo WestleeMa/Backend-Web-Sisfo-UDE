@@ -3,6 +3,7 @@ const db = require("knex")({
   connection: {
     host: "localhost",
     user: "root",
+    port: "3308",
     password: "",
     database: "db_sisfo_ude",
   },

@@ -15,14 +15,64 @@ const upload = multer({ storage });
 
 //Pengajuan Judul dan Dosen Pembimbing Skripsi
 async function form1(req, res) {
-  upload.single("file")(req, res, function (err) {
-    if (err instanceof multer.MulterError) {
-      return res.status(500).send("Multer error");
-    } else if (err) {
-      return res.status(500).send("Unknown error");
+  try {
+    await new Promise((resolve, reject) => {
+      upload.single("Draft_naskah")(req, res, function (err) {
+        if (err instanceof multer.MulterError) {
+          reject(new Error("Multer error: " + err.message));
+        } else if (err) {
+          reject(new Error("Unknown error: " + err.message));
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    const {
+      Nama,
+      NIM,
+      Bidang_kajian,
+      Judul_skripsi,
+      Judul_sebelum,
+      Dospem_sebelum,
+      Dospem1,
+      Dospem2,
+      Skema_skripsi,
+    } = req.body;
+
+    if (
+      !Nama ||
+      !NIM ||
+      !Bidang_kajian ||
+      !Judul_skripsi ||
+      !Dospem1 ||
+      !Dospem2 ||
+      !Skema_skripsi ||
+      !req.file
+    ) {
+      return res.status(400).send("Tolong lengkapi form.");
     }
-    res.send("Masuk form 1 gan");
-  });
+
+    const Draft_naskah = req.file.filename;
+
+    await db("pengajuan_judul").insert({
+      Nama,
+      NIM,
+      Bidang_kajian,
+      Judul_skripsi,
+      Judul_sebelum,
+      Dospem_sebelum,
+      Dospem1,
+      Dospem2,
+      Skema_skripsi,
+      Draft_naskah,
+    });
+
+    res.send("Form Pengajuan Judul Berhasil Terkirim");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message);
+  }
 }
 
 //Pendaftaran Ujian Seminar of Thesis Proposal
