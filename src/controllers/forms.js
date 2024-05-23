@@ -55,7 +55,7 @@ async function form1(req, res) {
 
     const Draft_naskah = req.file.filename;
 
-    await db("pengajuan_judul").insert({
+    const data = {
       Nama,
       NIM,
       Bidang_kajian,
@@ -66,9 +66,9 @@ async function form1(req, res) {
       Dospem2,
       Skema_skripsi,
       Draft_naskah,
-    });
-
-    res.send("Form Pengajuan Judul Berhasil Terkirim");
+    };
+    updateOrinsert("pengajuan_judul", data, NIM);
+    res.send("Berhasil Submit Pengajuan Judul dan Dosen Pembimbing Skripsi");
   } catch (error) {
     console.error(error);
     res.status(500).send(error.message);
@@ -122,7 +122,7 @@ async function form2(req, res) {
 
     const Bukti_approval = req.file.filename;
 
-    await db("pendaftaran_thesis_proposal").insert({
+    const data = {
       Nama,
       NIM,
       Bidang_kajian,
@@ -135,11 +135,9 @@ async function form2(req, res) {
       PA,
       Link_google,
       Bukti_approval,
-    });
-
-    res.send(
-      "Form Pendaftaran Ujian Seminar of Thesis Proposal Berhasil Terkirim"
-    );
+    };
+    updateOrinsert("pendaftaran_thesis_proposal", data, NIM);
+    res.send("Berhasil Submit Pendaftaran Ujian Seminar of Thesis Proposal");
   } catch (error) {
     console.error(error);
     res.status(500).send(error.message);
@@ -218,16 +216,8 @@ async function form3(req, res) {
       File_Hasil_ITP: File_Hasil_ITP[0].filename,
       Foto_Ijazah_SMA: Foto_Ijazah_SMA[0].filename,
     };
-
-    const existingRecord = await db("pengumpulan_file").where({ NIM }).first();
-
-    if (existingRecord) {
-      await db("pengumpulan_file").where({ NIM }).update(data);
-      res.send("Berhasil diperbaharui");
-    } else {
-      await db("pengumpulan_file").insert(data);
-      res.send("Berhasil ditambahkan");
-    }
+    updateOrinsert("pengumpulan_file", data, NIM);
+    res.send("Berhasil Submit Pengumpulan File: Syarat Sidang Skripsi");
     // res.sendFile(
     //   path.resolve(__dirname, "../../uploads", File_Transkrip[0].filename)
     // );
@@ -242,4 +232,13 @@ async function form4(req, res) {
   res.send("Masuk form 4 gan");
 }
 
+async function updateOrinsert(table, data, NIM) {
+  const existingRecord = await db(table).where({ NIM }).first();
+
+  if (existingRecord) {
+    await db(table).where({ NIM }).update(data);
+  } else {
+    await db(table).insert(data);
+  }
+}
 module.exports = { form1, form2, form3, form4 };
