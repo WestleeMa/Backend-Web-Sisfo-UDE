@@ -1,3 +1,4 @@
+const fs = require("fs");
 const db = require("../connect.js");
 const multer = require("multer");
 const path = require("path");
@@ -8,9 +9,10 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const fileExtension = path.extname(file.originalname);
-    cb(null, file.fieldname + "-" + uniqueSuffix + fileExtension);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${fileExtension}`);
   },
 });
+
 const upload = multer({ storage });
 
 //Pengajuan Judul dan Dosen Pembimbing Skripsi
@@ -303,4 +305,97 @@ async function updateOrinsert(table, data, NIM) {
     await db(table).insert(data);
   }
 }
-module.exports = { form1, form2, form3, form4 };
+
+//DELETE
+//Pengajuan Judul dan Dosen Pembimbing Skripsi
+async function delForm1(req, res) {
+  upload.none()(req, res, function () {
+    const { NIM } = req.body;
+    deleteData("pengajuan_judul", NIM, "Draft_naskah");
+    res.send(
+      "Penghapusan data pada tabel Pengajuan Judul dan Dosen Pembimbing Skripsi berhasil"
+    );
+  });
+}
+
+//Pendaftaran Ujian Seminar of Thesis Proposal
+async function delForm2(req, res) {
+  upload.none()(req, res, function () {
+    const { NIM } = req.body;
+    deleteData("pendaftaran_thesis_proposal", NIM, "Bukti_approval");
+    res.send(
+      "Penghapusan data pada tabel Pendaftaran Ujian Seminar of Thesis Proposal berhasil"
+    );
+  });
+}
+
+//Pengumpulan File: Syarat Sidang Skripsi
+async function delForm3(req, res) {
+  upload.none()(req, res, function () {
+    const { NIM } = req.body;
+    const columnNames = [
+      "File_Transkrip",
+      "File_Bebas_plagiat",
+      "File_Hasil_EPT",
+      "File_Hasil_Turnitin_sempro",
+      "File_bukti_lunas",
+      "File_bukti_softskills",
+      "File_Hasil_Turnitin_skripsi",
+      "File_draft_artikel_jurnal",
+      "File_Hasil_ITP",
+      "Foto_Ijazah_SMA",
+    ];
+    deleteData("pengumpulan_file", NIM, columnNames);
+    res.send(
+      "Penghapusan data pada tabel Pengumpulan File: Syarat Sidang Skripsi berhasil"
+    );
+  });
+}
+
+//Pendaftaran Sidang Skripsi
+async function delForm4(req, res) {
+  upload.none()(req, res, function () {
+    const { NIM } = req.body;
+    deleteData("pendaftaran_sidang_skripsi", NIM, "Bukti_approval");
+    res.send("Penghapusan data pada tabel Pendaftaran Sidang Skripsi berhasil");
+  });
+}
+
+async function deleteData(table, NIM, fileColumn) {
+  const filesToDelete = Object.values(
+    await db(table).select(fileColumn).where({ NIM }).first()
+  );
+  const deleteFile = (fileName) => {
+    const filePath = path.join(__dirname, "../../uploads", fileName);
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error(`Error deleting file ${fileName}: ${err}`);
+      } else {
+        console.log(`File ${fileName} deleted successfully`);
+      }
+    });
+  };
+  if (filesToDelete) {
+    await db(table).where({ NIM }).del();
+    filesToDelete.forEach(deleteFile);
+  }
+}
+
+//READ
+const data = "";
+async function viewAllData(table) {
+  data = await db(table);
+}
+
+async function viewData(table, NIM) {}
+
+module.exports = {
+  form1,
+  form2,
+  form3,
+  form4,
+  delForm1,
+  delForm2,
+  delForm3,
+  delForm4,
+};
