@@ -229,7 +229,70 @@ async function form3(req, res) {
 
 //Pendaftaran Sidang Skripsi
 async function form4(req, res) {
-  res.send("Masuk form 4 gan");
+  try {
+    await new Promise((resolve, reject) => {
+      upload.single("Bukti_approval")(req, res, function (err) {
+        if (err instanceof multer.MulterError) {
+          reject(new Error("Multer error: " + err.message));
+        } else if (err) {
+          reject(new Error("Unknown error: " + err.message));
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    const {
+      Nama,
+      NIM,
+      Bidang_kajian,
+      Skema_skripsi,
+      Penguji1,
+      Penguji2,
+      Penguji3,
+      PA,
+      Link_Google_docs,
+      Link_Video_presentasi,
+    } = req.body;
+
+    if (
+      !Nama ||
+      !NIM ||
+      !Bidang_kajian ||
+      !Penguji1 ||
+      !Penguji2 ||
+      !Penguji3 ||
+      !Skema_skripsi ||
+      !PA ||
+      !Link_Google_docs ||
+      !Link_Video_presentasi ||
+      !req.file
+    ) {
+      return res.status(400).send("Tolong lengkapi form.");
+    }
+
+    const Bukti_approval = req.file.filename;
+
+    const data = {
+      Nama,
+      NIM,
+      Bidang_kajian,
+      Skema_skripsi,
+      Judul_skripsi,
+      Judul_sebelum,
+      Penguji1,
+      Penguji2,
+      Penguji3,
+      PA,
+      Link_google,
+      Bukti_approval,
+    };
+    updateOrinsert("pendaftaran_sidang_skripsi", data, NIM);
+    res.send("Berhasil Submit Pendaftaran Sidang Skripsi");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message);
+  }
 }
 
 async function updateOrinsert(table, data, NIM) {
