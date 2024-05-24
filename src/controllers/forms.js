@@ -278,13 +278,12 @@ async function form4(req, res) {
       NIM,
       Bidang_kajian,
       Skema_skripsi,
-      Judul_skripsi,
-      Judul_sebelum,
       Penguji1,
       Penguji2,
       Penguji3,
       PA,
-      Link_google,
+      Link_Google_docs,
+      Link_Video_presentasi,
       Bukti_approval,
     };
     updateOrinsert("pendaftaran_sidang_skripsi", data, NIM);
