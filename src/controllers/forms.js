@@ -382,13 +382,77 @@ async function deleteData(table, NIM, fileColumn) {
 }
 
 //READ
-const data = "";
 async function viewAllData(table) {
-  data = await db(table);
+  return await db.select().from(table).first();
 }
 
-async function viewData(table, NIM) {}
+async function viewData(table, NIM) {
+  return await db(table).where({ NIM }).first();
+}
 
+async function viewFormSubmission(req, res) {
+  try {
+    const formID = req.params.formID;
+    const NIM = req.query.NIM;
+    console.log(formID + " " + NIM);
+    let formData;
+    if (NIM && formID) {
+      switch (formID) {
+        case "1":
+          formData = await viewData("pengajuan_judul", NIM);
+          break;
+        case "2":
+          formData = await viewData("pendaftaran_thesis_proposal", NIM);
+          break;
+        case "3":
+          formData = await viewData("pengumpulan_file", NIM);
+          break;
+        case "4":
+          formData = await viewData("pendaftaran_sidang_skripsi", NIM);
+          break;
+        default:
+          return res.status(400).send("Unknown formID:", formID);
+      }
+    } else if (formID) {
+      switch (formID) {
+        case "1":
+          formData = await viewAllData("pengajuan_judul");
+          break;
+        case "2":
+          formData = await viewAllData("pendaftaran_thesis_proposal");
+          break;
+        case "3":
+          formData = await viewAllData("pengumpulan_file");
+          break;
+        case "4":
+          formData = await viewAllData("pendaftaran_sidang_skripsi");
+          break;
+        default:
+          return res.status(400).send("Unknown formID:", formID);
+      }
+    } else {
+      return res.status(422).send("formID is required");
+    }
+
+    if (formData) {
+      res.status(200).json({
+        status: "success",
+        data: formData,
+      });
+    } else {
+      res.status(404).json({
+        status: "error",
+        message: "No Data Found",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "error",
+      error: error.message,
+    });
+  }
+}
 module.exports = {
   form1,
   form2,
@@ -398,4 +462,5 @@ module.exports = {
   delForm2,
   delForm3,
   delForm4,
+  viewFormSubmission,
 };

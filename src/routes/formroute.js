@@ -9,16 +9,10 @@ const {
   delForm2,
   delForm3,
   delForm4,
-  viewForm1,
-  viewForm2,
-  viewForm3,
-  viewForm4,
+  viewFormSubmission,
 } = require("../controllers/forms");
 
-router.get("/1", viewForm1);
-router.get("/2", viewForm2);
-router.get("/3", viewForm3);
-router.get("/4", viewForm4);
+router.get("/:formID", viewFormSubmission);
 router.post("/1", form1);
 router.post("/2", form2);
 router.post("/3", form3);
