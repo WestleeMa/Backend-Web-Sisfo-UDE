@@ -2,16 +2,8 @@ const fs = require("fs");
 const db = require("../connect.js");
 const multer = require("multer");
 const path = require("path");
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./uploads");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const fileExtension = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${fileExtension}`);
-  },
-});
+const archiver = require("archiver");
+const storage = require("../middleware/storageMiddleware");
 
 const upload = multer({ storage });
 
@@ -52,6 +44,8 @@ async function form1(req, res) {
       !Skema_skripsi ||
       !req.file
     ) {
+      if (req.file)
+        fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
       return res.status(400).send("Tolong lengkapi form.");
     }
 
@@ -119,6 +113,8 @@ async function form2(req, res) {
       !Link_google ||
       !req.file
     ) {
+      if (req.file)
+        fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
       return res.status(400).send("Tolong lengkapi form.");
     }
 
@@ -196,6 +192,16 @@ async function form3(req, res) {
     } = req.files;
 
     if (!Nama || !NIM || !req.files) {
+      if (req.files) {
+        const filesToDelete = Object.values(req.files)
+          .flat()
+          .map((file) => path.join(__dirname, "../../uploads", file.filename));
+        filesToDelete.forEach((file) => {
+          if (fs.existsSync(file)) {
+            fs.unlinkSync(file);
+          }
+        });
+      }
       return res.status(400).send("Tolong lengkapi form.");
     }
 
@@ -220,9 +226,6 @@ async function form3(req, res) {
     };
     updateOrinsert("pengumpulan_file", data, NIM);
     res.send("Berhasil Submit Pengumpulan File: Syarat Sidang Skripsi");
-    // res.sendFile(
-    //   path.resolve(__dirname, "../../uploads", File_Transkrip[0].filename)
-    // );
   } catch (error) {
     console.error(error);
     res.status(500).send(error.message);
@@ -270,6 +273,8 @@ async function form4(req, res) {
       !Link_Video_presentasi ||
       !req.file
     ) {
+      if (req.file)
+        fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
       return res.status(400).send("Tolong lengkapi form.");
     }
 
@@ -362,9 +367,7 @@ async function delForm4(req, res) {
 }
 
 async function deleteData(table, NIM, fileColumn) {
-  const filesToDelete = Object.values(
-    await db(table).select(fileColumn).where({ NIM }).first()
-  );
+  const filesToDelete = await collectFiles(table, NIM, fileColumn);
   const deleteFile = (fileName) => {
     const filePath = path.join(__dirname, "../../uploads", fileName);
     fs.unlink(filePath, (err) => {
@@ -383,7 +386,7 @@ async function deleteData(table, NIM, fileColumn) {
 
 //READ
 async function viewAllData(table) {
-  return await db.select().from(table).first();
+  return await db(table).first();
 }
 
 async function viewData(table, NIM) {
@@ -393,7 +396,7 @@ async function viewData(table, NIM) {
 async function viewFormSubmission(req, res) {
   try {
     const formID = req.params.formID;
-    const NIM = req.query.NIM;
+    const { NIM } = req.query;
     console.log(formID + " " + NIM);
     let formData;
     if (NIM && formID) {
@@ -453,6 +456,129 @@ async function viewFormSubmission(req, res) {
     });
   }
 }
+async function collectFiles(table, NIM, fileColumn) {
+  try {
+    const result = await db(table).select(fileColumn).where({ NIM }).first();
+    if (result) {
+      return Object.values(result);
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error("Error collecting files:", error);
+    throw error;
+  }
+}
+
+async function downloadFiles(req, res) {
+  const formID = req.params.formID;
+  const { NIM } = req.query;
+  let table;
+  let fileColumn;
+
+  if (NIM && formID) {
+    switch (formID) {
+      case "1":
+        table = "pengajuan_judul";
+        fileColumn = "Draft_naskah";
+        break;
+      case "2":
+        table = "pendaftaran_thesis_proposal";
+        fileColumn = "Bukti_approval";
+        break;
+      case "3":
+        table = "pengumpulan_file";
+        fileColumn = [
+          "File_Transkrip",
+          "File_Bebas_plagiat",
+          "File_Hasil_EPT",
+          "File_Hasil_Turnitin_sempro",
+          "File_bukti_lunas",
+          "File_bukti_softskills",
+          "File_Hasil_Turnitin_skripsi",
+          "File_draft_artikel_jurnal",
+          "File_Hasil_ITP",
+          "Foto_Ijazah_SMA",
+        ];
+        break;
+      case "4":
+        table = "pendaftaran_sidang_skripsi";
+        fileColumn = "Bukti_approval";
+        break;
+      default:
+        return res.status(400).send("Unknown formID:", formID);
+    }
+  } else {
+    return res.status(400).send("formID and NIM is required");
+  }
+
+  try {
+    const filenames = await collectFiles(table, NIM, fileColumn);
+    const uploadDir = path.join(__dirname, "../../uploads");
+
+    if (filenames.length === 1) {
+      const singleFile = filenames[0];
+      const filePath = path.join(uploadDir, singleFile);
+
+      if (fs.existsSync(filePath)) {
+        res.download(filePath, singleFile, (err) => {
+          if (err) {
+            console.error("Error downloading the file:", err);
+            res.status(500).send("Error downloading the file");
+          }
+        });
+      } else {
+        res.status(404).send("File not found");
+      }
+    } else if (filenames.length > 1) {
+      const zipFilename = `files-${NIM}.zip`;
+      const zipFilePath = path.join(uploadDir, zipFilename);
+      const output = fs.createWriteStream(zipFilePath);
+      const archive = archiver("zip", { zlib: { level: 9 } });
+
+      output.on("close", () => {
+        res.download(zipFilePath, zipFilename, (err) => {
+          if (err) {
+            console.error("Error downloading the file:", err);
+            res.status(500).send("Error downloading the file");
+          }
+
+          fs.unlink(zipFilePath, (err) => {
+            if (err) {
+              console.error("Error deleting the zip file:", err);
+            }
+          });
+        });
+      });
+
+      archive.on("error", (err) => {
+        throw err;
+      });
+
+      archive.pipe(output);
+
+      filenames.forEach((filename) => {
+        const filePath = path.join(uploadDir, filename);
+        if (fs.existsSync(filePath)) {
+          archive.file(filePath, { name: filename });
+        } else {
+          console.warn(`File not found: ${filename}`);
+        }
+      });
+
+      archive.finalize();
+    } else {
+      res.status(404).send("No files found");
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+}
+
 module.exports = {
   form1,
   form2,
@@ -463,4 +589,5 @@ module.exports = {
   delForm3,
   delForm4,
   viewFormSubmission,
+  downloadFiles,
 };

@@ -10,8 +10,10 @@ const {
   delForm3,
   delForm4,
   viewFormSubmission,
+  downloadFiles,
 } = require("../controllers/forms");
 
+router.get("/download/:formID", downloadFiles);
 router.get("/:formID", viewFormSubmission);
 router.post("/1", form1);
 router.post("/2", form2);
