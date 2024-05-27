@@ -440,7 +440,7 @@ async function viewFormSubmission(req, res) {
     if (formData) {
       res.status(200).json({
         status: "success",
-        data: formData,
+        data: [formData],
       });
     } else {
       res.status(404).json({
