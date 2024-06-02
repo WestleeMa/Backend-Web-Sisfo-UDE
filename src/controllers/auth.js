@@ -12,17 +12,21 @@ async function login(req, res) {
   try {
     upload.none()(req, res, async function () {
       const { NIM, password } = req.body;
-      const user = await db("users").where(`Nomor_Induk`, NIM).first();
-      if (!user || !bcrypt.compareSync(password, user.Password)) {
-        return res.status(401).send("Invalid NIM or password");
+      if (NIM && password) {
+        const user = await db("users").where(`Nomor_Induk`, NIM).first();
+        if (!user || !bcrypt.compareSync(password, user.Password)) {
+          return res.status(401).send("Invalid NIM or password");
+        }
+        res.json(
+          jwt.sign(
+            { name: user.Name, role: user.Role, desc: user.Extra_Desc },
+            privateKey,
+            { expiresIn: "2h" }
+          )
+        );
+      } else {
+        res.status(400).send("Uncomplete request");
       }
-      res.json(
-        jwt.sign(
-          { name: user.Name, role: user.Role, desc: user.Extra_Desc },
-          privateKey,
-          { expiresIn: "2h" }
-        )
-      );
     });
   } catch (error) {
     console.error(error);

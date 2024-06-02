@@ -386,7 +386,7 @@ async function deleteData(table, NIM, fileColumn) {
 
 //READ
 async function viewAllData(table) {
-  return await db(table).first();
+  return await db(table);
 }
 
 async function viewData(table, NIM) {
