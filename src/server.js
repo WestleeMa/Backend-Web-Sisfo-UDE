@@ -24,8 +24,10 @@ app.get("/", (req, res) => {
 
 const Router = require("./routes/route");
 const formRouter = require("./routes/formroute");
+const infoRouter = require("./routes/inforoute");
 
 app.use("/", Router);
 app.use("/form", formRouter);
+app.use("/info", infoRouter);
 
 app.listen(5000);
