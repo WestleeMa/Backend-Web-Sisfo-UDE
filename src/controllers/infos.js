@@ -36,6 +36,36 @@ const upload = multer({
   storage,
 });
 
+async function delInfo(req, res) {
+  try {
+    const Info_ID = req.query.Info_ID;
+    const fileToDelete = await db("infos")
+      .select("Photos")
+      .where({ Info_ID })
+      .first();
+    const deleteFile = (fileName) => {
+      if (fileName) {
+        const filePath = path.join(__dirname, "../../uploads", fileName);
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error(`Error deleting file ${fileName}: ${err}`);
+            throw err;
+          } else {
+            return `File ${fileName} deleted successfully`;
+          }
+        });
+      }
+    };
+    if (fileToDelete) {
+      await db("infos").where({ Info_ID }).del();
+      deleteFile(fileToDelete.Photos);
+      res.send("Penghapusan info berhasil");
+    }
+  } catch (err) {
+    throw err;
+  }
+}
+
 async function addOrEditInfo(req, res) {
   try {
     await new Promise((resolve, reject) => {
@@ -113,4 +143,4 @@ async function updateOrinsert(table, data, Info_ID) {
     throw error;
   }
 }
-module.exports = { info, infoImage, addOrEditInfo };
+module.exports = { info, infoImage, addOrEditInfo, delInfo };

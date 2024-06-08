@@ -373,8 +373,9 @@ async function deleteData(table, NIM, fileColumn) {
     fs.unlink(filePath, (err) => {
       if (err) {
         console.error(`Error deleting file ${fileName}: ${err}`);
+        throw err;
       } else {
-        console.log(`File ${fileName} deleted successfully`);
+        return `File ${fileName} deleted successfully`;
       }
     });
   };
@@ -397,7 +398,6 @@ async function viewFormSubmission(req, res) {
   try {
     const formID = req.params.formID;
     const { NIM } = req.query;
-    console.log(formID + " " + NIM);
     let formData;
     if (NIM && formID) {
       switch (formID) {
