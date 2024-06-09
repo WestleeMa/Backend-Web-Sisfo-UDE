@@ -1,7 +1,7 @@
 const db = require("../connect.js");
 
 async function dosen(req, res) {
-  const resQuery = await db("dosen pembimbing");
+  const resQuery = await db("dosen_pembimbing");
   res.send(resQuery);
 }
 

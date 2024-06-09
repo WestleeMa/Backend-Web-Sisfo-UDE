@@ -23,7 +23,6 @@ async function form1(req, res) {
     });
 
     const {
-      Nama,
       NIM,
       Bidang_kajian,
       Judul_skripsi,
@@ -35,7 +34,6 @@ async function form1(req, res) {
     } = req.body;
 
     if (
-      !Nama ||
       !NIM ||
       !Bidang_kajian ||
       !Judul_skripsi ||
@@ -52,7 +50,6 @@ async function form1(req, res) {
     const Draft_naskah = req.file.filename;
 
     const data = {
-      Nama,
       NIM,
       Bidang_kajian,
       Judul_skripsi,
@@ -87,7 +84,6 @@ async function form2(req, res) {
     });
 
     const {
-      Nama,
       NIM,
       Bidang_kajian,
       Skema_skripsi,
@@ -101,7 +97,6 @@ async function form2(req, res) {
     } = req.body;
 
     if (
-      !Nama ||
       !NIM ||
       !Bidang_kajian ||
       !Judul_skripsi ||
@@ -121,7 +116,6 @@ async function form2(req, res) {
     const Bukti_approval = req.file.filename;
 
     const data = {
-      Nama,
       NIM,
       Bidang_kajian,
       Skema_skripsi,
@@ -169,7 +163,6 @@ async function form3(req, res) {
     });
 
     const {
-      Nama,
       NIM,
       Skor_EPT,
       Hasil_Turnitin_sempro,
@@ -191,7 +184,7 @@ async function form3(req, res) {
       Foto_Ijazah_SMA,
     } = req.files;
 
-    if (!Nama || !NIM || !req.files) {
+    if (!NIM || !req.files) {
       if (req.files) {
         const filesToDelete = Object.values(req.files)
           .flat()
@@ -206,7 +199,6 @@ async function form3(req, res) {
     }
 
     const data = {
-      Nama,
       NIM,
       Skor_EPT,
       Hasil_Turnitin_sempro,
@@ -248,7 +240,6 @@ async function form4(req, res) {
     });
 
     const {
-      Nama,
       NIM,
       Bidang_kajian,
       Skema_skripsi,
@@ -261,7 +252,6 @@ async function form4(req, res) {
     } = req.body;
 
     if (
-      !Nama ||
       !NIM ||
       !Bidang_kajian ||
       !Penguji1 ||
@@ -281,7 +271,6 @@ async function form4(req, res) {
     const Bukti_approval = req.file.filename;
 
     const data = {
-      Nama,
       NIM,
       Bidang_kajian,
       Skema_skripsi,
@@ -386,13 +375,13 @@ async function deleteData(table, NIM, fileColumn) {
 }
 
 //READ
-async function viewAllData(table) {
-  return await db(table);
-}
+// async function viewAllData(table) {
+//   return await db(table);
+// }
 
-async function viewData(table, NIM) {
-  return await db(table).where({ NIM }).first();
-}
+// async function viewData(table, NIM) {
+//   return await db(table).where({ NIM }).first();
+// }
 
 async function viewFormSubmission(req, res) {
   try {
@@ -402,16 +391,99 @@ async function viewFormSubmission(req, res) {
     if (NIM && formID) {
       switch (formID) {
         case "1":
-          formData = await viewData("pengajuan_judul", NIM);
+          formData = await db("pengajuan_judul as s")
+            .select(
+              "s.Submission_ID",
+              "u.Name as Nama",
+              "s.NIM",
+              "s.Bidang_kajian",
+              "s.Judul_skripsi",
+              "s.Judul_sebelum",
+              "ds.Nama as Dospem_sebelum",
+              "d1.Nama as Dospem1",
+              "d2.Nama as Dospem2",
+              "s.Draft_naskah",
+              "s.Skema_skripsi",
+              "s.Timestamps"
+            )
+            .leftJoin(
+              { ds: "dosen_pembimbing" },
+              "s.Dospem_sebelum",
+              "ds.key_dosen"
+            )
+            .leftJoin({ d1: "dosen_pembimbing" }, "s.Dospem1", "d1.key_dosen")
+            .leftJoin({ d2: "dosen_pembimbing" }, "s.Dospem2", "d2.key_dosen")
+            .leftJoin({ u: "users" }, "s.NIM", "u.Nomor_Induk")
+            .where({ NIM })
+            .first();
           break;
         case "2":
-          formData = await viewData("pendaftaran_thesis_proposal", NIM);
+          formData = await db("pendaftaran_thesis_proposal as s")
+            .select(
+              "s.Submission_ID",
+              "u.Name as Nama",
+              "s.NIM",
+              "s.Bidang_kajian",
+              "s.Judul_skripsi",
+              "s.Judul_sebelum",
+              "p1.nama as Penguji1",
+              "p2.nama as Penguji2",
+              "p3.nama as Penguji3",
+              "pa.nama as PA",
+              "s.Bukti_approval",
+              "s.Skema_skripsi",
+              "s.Timestamps",
+              "s.Link_google"
+            )
+            .leftJoin({ p1: "dosen_pembimbing" }, "s.Penguji1", "p1.key_dosen")
+            .leftJoin({ p2: "dosen_pembimbing" }, "s.Penguji2", "p2.key_dosen")
+            .leftJoin({ p3: "dosen_pembimbing" }, "s.Penguji3", "p3.key_dosen")
+            .leftJoin({ pa: "dosen_pembimbing" }, "s.PA", "pa.key_dosen")
+            .leftJoin({ u: "users" }, "s.NIM", "u.Nomor_Induk")
+            .where({ NIM })
+            .first();
           break;
         case "3":
-          formData = await viewData("pengumpulan_file", NIM);
+          formData = await db("pengumpulan_file as s")
+            .select(
+              "s.Submission_ID",
+              "u.Name as Nama",
+              "s.NIM",
+              "s.Skor_EPT",
+              "s.Hasil_Turnitin_sempro",
+              "s.Hasil_Turnitin_skripsi",
+              "s.Hasil_ITP",
+              "s.Link_lembar_bimbingan",
+              "s.Timestamps"
+            )
+            .leftJoin({ u: "users" }, "s.NIM", "u.Nomor_Induk")
+            .where({ NIM })
+            .first();
           break;
         case "4":
-          formData = await viewData("pendaftaran_sidang_skripsi", NIM);
+          formData = await db("pendaftaran_sidang_skripsi as s")
+            .select(
+              "s.Submission_ID",
+              "u.Name as Nama",
+              "s.NIM",
+              "s.Bidang_kajian",
+              "s.Skema_skripsi",
+              "p1.nama as Penguji1",
+              "p2.nama as Penguji2",
+              "p3.nama as Penguji3",
+              "pa.nama as PA",
+              "s.Bukti_approval",
+              "s.Link_Google_docs",
+              "s.Link_Video_presentasi",
+              "s.Timestamps"
+            )
+            .leftJoin({ p1: "dosen_pembimbing" }, "s.Penguji1", "p1.key_dosen")
+            .leftJoin({ p2: "dosen_pembimbing" }, "s.Penguji2", "p2.key_dosen")
+            .leftJoin({ p3: "dosen_pembimbing" }, "s.Penguji3", "p3.key_dosen")
+            .leftJoin({ pa: "dosen_pembimbing" }, "s.PA", "pa.key_dosen")
+            .leftJoin({ u: "users" }, "s.NIM", "u.Nomor_Induk")
+            .where({ NIM })
+            .first();
           break;
         default:
           return res.status(400).send("Unknown formID:", formID);
@@ -419,16 +491,91 @@ async function viewFormSubmission(req, res) {
     } else if (formID) {
       switch (formID) {
         case "1":
-          formData = await viewAllData("pengajuan_judul");
+          formData = await db("pengajuan_judul as s")
+            .select(
+              "s.Submission_ID",
+              "u.Name as Nama",
+              "s.NIM",
+              "s.Bidang_kajian",
+              "s.Judul_skripsi",
+              "s.Judul_sebelum",
+              "ds.Nama as Dospem_sebelum",
+              "d1.Nama as Dospem1",
+              "d2.Nama as Dospem2",
+              "s.Draft_naskah",
+              "s.Skema_skripsi",
+              "s.Timestamps"
+            )
+            .leftJoin(
+              { ds: "dosen_pembimbing" },
+              "s.Dospem_sebelum",
+              "ds.key_dosen"
+            )
+            .leftJoin({ d1: "dosen_pembimbing" }, "s.Dospem1", "d1.key_dosen")
+            .leftJoin({ d2: "dosen_pembimbing" }, "s.Dospem2", "d2.key_dosen")
+            .leftJoin({ u: "users" }, "s.NIM", "u.Nomor_Induk");
           break;
         case "2":
-          formData = await viewAllData("pendaftaran_thesis_proposal");
+          formData = await db("pendaftaran_thesis_proposal as s")
+            .select(
+              "s.Submission_ID",
+              "u.Name as Nama",
+              "s.NIM",
+              "s.Bidang_kajian",
+              "s.Judul_skripsi",
+              "s.Judul_sebelum",
+              "p1.nama as Penguji1",
+              "p2.nama as Penguji2",
+              "p3.nama as Penguji3",
+              "pa.nama as PA",
+              "s.Bukti_approval",
+              "s.Skema_skripsi",
+              "s.Timestamps",
+              "s.Link_google"
+            )
+            .leftJoin({ p1: "dosen_pembimbing" }, "s.Penguji1", "p1.key_dosen")
+            .leftJoin({ p2: "dosen_pembimbing" }, "s.Penguji2", "p2.key_dosen")
+            .leftJoin({ p3: "dosen_pembimbing" }, "s.Penguji3", "p3.key_dosen")
+            .leftJoin({ pa: "dosen_pembimbing" }, "s.PA", "pa.key_dosen")
+            .leftJoin({ u: "users" }, "s.NIM", "u.Nomor_Induk");
           break;
         case "3":
-          formData = await viewAllData("pengumpulan_file");
+          formData = await db("pengumpulan_file as s")
+            .select(
+              "s.Submission_ID",
+              "u.Name as Nama",
+              "s.NIM",
+              "s.Skor_EPT",
+              "s.Hasil_Turnitin_sempro",
+              "s.Hasil_Turnitin_skripsi",
+              "s.Hasil_ITP",
+              "s.Link_lembar_bimbingan",
+              "s.Timestamps"
+            )
+            .leftJoin({ u: "users" }, "s.NIM", "u.Nomor_Induk");
           break;
         case "4":
-          formData = await viewAllData("pendaftaran_sidang_skripsi");
+          formData = await db("pendaftaran_sidang_skripsi as s")
+            .select(
+              "s.Submission_ID",
+              "u.Name as Nama",
+              "s.NIM",
+              "s.Bidang_kajian",
+              "s.Skema_skripsi",
+              "p1.nama as Penguji1",
+              "p2.nama as Penguji2",
+              "p3.nama as Penguji3",
+              "pa.nama as PA",
+              "s.Bukti_approval",
+              "s.Link_Google_docs",
+              "s.Link_Video_presentasi",
+              "s.Timestamps"
+            )
+            .leftJoin({ p1: "dosen_pembimbing" }, "s.Penguji1", "p1.key_dosen")
+            .leftJoin({ p2: "dosen_pembimbing" }, "s.Penguji2", "p2.key_dosen")
+            .leftJoin({ p3: "dosen_pembimbing" }, "s.Penguji3", "p3.key_dosen")
+            .leftJoin({ pa: "dosen_pembimbing" }, "s.PA", "pa.key_dosen")
+            .leftJoin({ u: "users" }, "s.NIM", "u.Nomor_Induk");
           break;
         default:
           return res.status(400).send("Unknown formID:", formID);
