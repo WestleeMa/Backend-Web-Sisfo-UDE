@@ -42,6 +42,7 @@ async function form1(req, res) {
       !Skema_skripsi ||
       !req.file
     ) {
+      console.log(req.body);
       if (req.file)
         fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
       return res.status(400).send("Tolong lengkapi form.");
@@ -60,8 +61,14 @@ async function form1(req, res) {
       Skema_skripsi,
       Draft_naskah,
     };
-    updateOrinsert("pengajuan_judul", data, NIM);
-    res.send("Berhasil Submit Pengajuan Judul dan Dosen Pembimbing Skripsi");
+    const dbresponse = await updateOrinsert("pengajuan_judul", data, NIM);
+    if (dbresponse === 1) {
+      res.send("Berhasil Submit Pengajuan Judul dan Dosen Pembimbing Skripsi");
+    } else {
+      if (req.file)
+        fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
+      res.status(400).send("Invalid Data");
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send(error.message);
@@ -291,12 +298,17 @@ async function form4(req, res) {
 }
 
 async function updateOrinsert(table, data, NIM) {
-  const existingRecord = await db(table).where({ NIM }).first();
+  try {
+    const existingRecord = await db(table).where({ NIM }).first();
 
-  if (existingRecord) {
-    await db(table).where({ NIM }).update(data);
-  } else {
-    await db(table).insert(data);
+    if (existingRecord) {
+      await db(table).where({ NIM }).update(data);
+    } else {
+      await db(table).insert(data);
+    }
+    return 1;
+  } catch (err) {
+    return err;
   }
 }
 
@@ -399,17 +411,12 @@ async function viewFormSubmission(req, res) {
               "s.Bidang_kajian",
               "s.Judul_skripsi",
               "s.Judul_sebelum",
-              "ds.Nama as Dospem_sebelum",
+              "s.Dospem_sebelum",
               "d1.Nama as Dospem1",
               "d2.Nama as Dospem2",
               "s.Draft_naskah",
               "s.Skema_skripsi",
               "s.Timestamps"
-            )
-            .leftJoin(
-              { ds: "dosen_pembimbing" },
-              "s.Dospem_sebelum",
-              "ds.key_dosen"
             )
             .leftJoin({ d1: "dosen_pembimbing" }, "s.Dospem1", "d1.key_dosen")
             .leftJoin({ d2: "dosen_pembimbing" }, "s.Dospem2", "d2.key_dosen")

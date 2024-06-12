@@ -19,7 +19,12 @@ async function login(req, res) {
         }
         res.json(
           jwt.sign(
-            { name: user.Name, role: user.Role, desc: user.Extra_Desc },
+            {
+              name: user.Name,
+              role: user.Role,
+              desc: user.Extra_Desc,
+              Nomor_Induk: user.Nomor_Induk,
+            },
             privateKey,
             { expiresIn: "2h" }
           )
