@@ -135,8 +135,18 @@ async function form2(req, res) {
       Link_google,
       Bukti_approval,
     };
-    updateOrinsert("pendaftaran_thesis_proposal", data, NIM);
-    res.send("Berhasil Submit Pendaftaran Ujian Seminar of Thesis Proposal");
+    const dbresponse = await updateOrinsert(
+      "pendaftaran_thesis_proposal",
+      data,
+      NIM
+    );
+    if (dbresponse === 1) {
+      res.send("Berhasil Submit Pendaftaran Ujian Seminar of Thesis Proposal");
+    } else {
+      if (req.file)
+        fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
+      res.status(400).send("Invalid Data");
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send(error.message);
@@ -178,20 +188,40 @@ async function form3(req, res) {
       Link_lembar_bimbingan,
     } = req.body;
 
-    const {
-      File_Transkrip,
-      File_Bebas_plagiat,
-      File_Hasil_EPT,
-      File_Hasil_Turnitin_sempro,
-      File_bukti_lunas,
-      File_bukti_softskills,
-      File_Hasil_Turnitin_skripsi,
-      File_draft_artikel_jurnal,
-      File_Hasil_ITP,
-      Foto_Ijazah_SMA,
-    } = req.files;
+    if (!NIM) {
+      return res.status(400).send("Tolong lengkapi form.");
+    }
 
-    if (!NIM || !req.files) {
+    const files = {
+      File_Transkrip: req.files?.File_Transkrip?.[0]?.filename,
+      File_Bebas_plagiat: req.files?.File_Bebas_plagiat?.[0]?.filename,
+      File_Hasil_EPT: req.files?.File_Hasil_EPT?.[0]?.filename,
+      File_Hasil_Turnitin_sempro:
+        req.files?.File_Hasil_Turnitin_sempro?.[0]?.filename,
+      File_bukti_lunas: req.files?.File_bukti_lunas?.[0]?.filename,
+      File_bukti_softskills: req.files?.File_bukti_softskills?.[0]?.filename,
+      File_Hasil_Turnitin_skripsi:
+        req.files?.File_Hasil_Turnitin_skripsi?.[0]?.filename,
+      File_draft_artikel_jurnal:
+        req.files?.File_draft_artikel_jurnal?.[0]?.filename,
+      File_Hasil_ITP: req.files?.File_Hasil_ITP?.[0]?.filename,
+      Foto_Ijazah_SMA: req.files?.Foto_Ijazah_SMA?.[0]?.filename,
+    };
+
+    const data = {
+      NIM,
+      Skor_EPT,
+      Hasil_Turnitin_sempro,
+      Hasil_Turnitin_skripsi,
+      Hasil_ITP,
+      Link_lembar_bimbingan,
+      ...files,
+    };
+
+    const dbresponse = await updateOrinsert("pengumpulan_file", data, NIM);
+    if (dbresponse === 1) {
+      res.send("Berhasil Submit Pengumpulan File: Syarat Sidang Skripsi");
+    } else {
       if (req.files) {
         const filesToDelete = Object.values(req.files)
           .flat()
@@ -202,31 +232,20 @@ async function form3(req, res) {
           }
         });
       }
-      return res.status(400).send("Tolong lengkapi form.");
+      res.status(400).send("Invalid Data");
     }
-
-    const data = {
-      NIM,
-      Skor_EPT,
-      Hasil_Turnitin_sempro,
-      Hasil_Turnitin_skripsi,
-      Hasil_ITP,
-      Link_lembar_bimbingan,
-      File_Transkrip: File_Transkrip[0].filename,
-      File_Bebas_plagiat: File_Bebas_plagiat[0].filename,
-      File_Hasil_EPT: File_Hasil_EPT[0].filename,
-      File_Hasil_Turnitin_sempro: File_Hasil_Turnitin_sempro[0].filename,
-      File_bukti_lunas: File_bukti_lunas[0].filename,
-      File_bukti_softskills: File_bukti_softskills[0].filename,
-      File_Hasil_Turnitin_skripsi: File_Hasil_Turnitin_skripsi[0].filename,
-      File_draft_artikel_jurnal: File_draft_artikel_jurnal[0].filename,
-      File_Hasil_ITP: File_Hasil_ITP[0].filename,
-      Foto_Ijazah_SMA: Foto_Ijazah_SMA[0].filename,
-    };
-    updateOrinsert("pengumpulan_file", data, NIM);
-    res.send("Berhasil Submit Pengumpulan File: Syarat Sidang Skripsi");
   } catch (error) {
     console.error(error);
+    if (req.files) {
+      const filesToDelete = Object.values(req.files)
+        .flat()
+        .map((file) => path.join(__dirname, "../../uploads", file.filename));
+      filesToDelete.forEach((file) => {
+        if (fs.existsSync(file)) {
+          fs.unlinkSync(file);
+        }
+      });
+    }
     res.status(500).send(error.message);
   }
 }
@@ -248,6 +267,7 @@ async function form4(req, res) {
 
     const {
       NIM,
+      Judul_skripsi,
       Bidang_kajian,
       Skema_skripsi,
       Penguji1,
@@ -260,6 +280,7 @@ async function form4(req, res) {
 
     if (
       !NIM ||
+      !Judul_skripsi ||
       !Bidang_kajian ||
       !Penguji1 ||
       !Penguji2 ||
@@ -279,6 +300,7 @@ async function form4(req, res) {
 
     const data = {
       NIM,
+      Judul_skripsi,
       Bidang_kajian,
       Skema_skripsi,
       Penguji1,
@@ -289,8 +311,18 @@ async function form4(req, res) {
       Link_Video_presentasi,
       Bukti_approval,
     };
-    updateOrinsert("pendaftaran_sidang_skripsi", data, NIM);
-    res.send("Berhasil Submit Pendaftaran Sidang Skripsi");
+    const dbresponse = await updateOrinsert(
+      "pendaftaran_sidang_skripsi",
+      data,
+      NIM
+    );
+    if (dbresponse === 1) {
+      res.send("Berhasil Submit Pendaftaran Sidang Skripsi");
+    } else {
+      if (req.file)
+        fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
+      res.status(400).send("Invalid Data");
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send(error.message);
@@ -370,15 +402,17 @@ async function delForm4(req, res) {
 async function deleteData(table, NIM, fileColumn) {
   const filesToDelete = await collectFiles(table, NIM, fileColumn);
   const deleteFile = (fileName) => {
-    const filePath = path.join(__dirname, "../../uploads", fileName);
-    fs.unlink(filePath, (err) => {
-      if (err) {
-        console.error(`Error deleting file ${fileName}: ${err}`);
-        throw err;
-      } else {
-        return `File ${fileName} deleted successfully`;
-      }
-    });
+    if (fileName) {
+      const filePath = path.join(__dirname, "../../uploads", fileName);
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error(`Error deleting file ${fileName}: ${err}`);
+          throw err;
+        } else {
+          return `File ${fileName} deleted successfully`;
+        }
+      });
+    }
   };
   if (filesToDelete) {
     await db(table).where({ NIM }).del();
@@ -387,13 +421,6 @@ async function deleteData(table, NIM, fileColumn) {
 }
 
 //READ
-// async function viewAllData(table) {
-//   return await db(table);
-// }
-
-// async function viewData(table, NIM) {
-//   return await db(table).where({ NIM }).first();
-// }
 
 async function viewFormSubmission(req, res) {
   try {
@@ -408,16 +435,18 @@ async function viewFormSubmission(req, res) {
               "s.Submission_ID",
               "u.Name as Nama",
               "s.NIM",
-              "s.Bidang_kajian",
+              "bk.descr as Bidang_kajian",
+              "ss.descr as Skema_skripsi",
               "s.Judul_skripsi",
               "s.Judul_sebelum",
               "s.Dospem_sebelum",
               "d1.Nama as Dospem1",
               "d2.Nama as Dospem2",
               "s.Draft_naskah",
-              "s.Skema_skripsi",
               "s.Timestamps"
             )
+            .leftJoin({ bk: "bidang_kajian" }, "s.Bidang_kajian", "bk.id")
+            .leftJoin({ ss: "skema_skripsi" }, "s.Skema_skripsi", "ss.id")
             .leftJoin({ d1: "dosen_pembimbing" }, "s.Dospem1", "d1.key_dosen")
             .leftJoin({ d2: "dosen_pembimbing" }, "s.Dospem2", "d2.key_dosen")
             .leftJoin({ u: "users" }, "s.NIM", "u.Nomor_Induk")
@@ -430,7 +459,8 @@ async function viewFormSubmission(req, res) {
               "s.Submission_ID",
               "u.Name as Nama",
               "s.NIM",
-              "s.Bidang_kajian",
+              "bk.descr as Bidang_kajian",
+              "ss.descr as Skema_skripsi",
               "s.Judul_skripsi",
               "s.Judul_sebelum",
               "p1.nama as Penguji1",
@@ -438,10 +468,11 @@ async function viewFormSubmission(req, res) {
               "p3.nama as Penguji3",
               "pa.nama as PA",
               "s.Bukti_approval",
-              "s.Skema_skripsi",
               "s.Timestamps",
               "s.Link_google"
             )
+            .leftJoin({ bk: "bidang_kajian" }, "s.Bidang_kajian", "bk.id")
+            .leftJoin({ ss: "skema_skripsi" }, "s.Skema_skripsi", "ss.id")
             .leftJoin({ p1: "dosen_pembimbing" }, "s.Penguji1", "p1.key_dosen")
             .leftJoin({ p2: "dosen_pembimbing" }, "s.Penguji2", "p2.key_dosen")
             .leftJoin({ p3: "dosen_pembimbing" }, "s.Penguji3", "p3.key_dosen")
@@ -473,8 +504,8 @@ async function viewFormSubmission(req, res) {
               "s.Submission_ID",
               "u.Name as Nama",
               "s.NIM",
-              "s.Bidang_kajian",
-              "s.Skema_skripsi",
+              "bk.descr as Bidang_kajian",
+              "ss.descr as Skema_skripsi",
               "p1.nama as Penguji1",
               "p2.nama as Penguji2",
               "p3.nama as Penguji3",
@@ -484,6 +515,8 @@ async function viewFormSubmission(req, res) {
               "s.Link_Video_presentasi",
               "s.Timestamps"
             )
+            .leftJoin({ bk: "bidang_kajian" }, "s.Bidang_kajian", "bk.id")
+            .leftJoin({ ss: "skema_skripsi" }, "s.Skema_skripsi", "ss.id")
             .leftJoin({ p1: "dosen_pembimbing" }, "s.Penguji1", "p1.key_dosen")
             .leftJoin({ p2: "dosen_pembimbing" }, "s.Penguji2", "p2.key_dosen")
             .leftJoin({ p3: "dosen_pembimbing" }, "s.Penguji3", "p3.key_dosen")
@@ -503,21 +536,18 @@ async function viewFormSubmission(req, res) {
               "s.Submission_ID",
               "u.Name as Nama",
               "s.NIM",
-              "s.Bidang_kajian",
+              "bk.descr as Bidang_kajian",
+              "ss.descr as Skema_skripsi",
               "s.Judul_skripsi",
               "s.Judul_sebelum",
-              "ds.Nama as Dospem_sebelum",
+              "s.Dospem_sebelum",
               "d1.Nama as Dospem1",
               "d2.Nama as Dospem2",
               "s.Draft_naskah",
-              "s.Skema_skripsi",
               "s.Timestamps"
             )
-            .leftJoin(
-              { ds: "dosen_pembimbing" },
-              "s.Dospem_sebelum",
-              "ds.key_dosen"
-            )
+            .leftJoin({ bk: "bidang_kajian" }, "s.Bidang_kajian", "bk.id")
+            .leftJoin({ ss: "skema_skripsi" }, "s.Skema_skripsi", "ss.id")
             .leftJoin({ d1: "dosen_pembimbing" }, "s.Dospem1", "d1.key_dosen")
             .leftJoin({ d2: "dosen_pembimbing" }, "s.Dospem2", "d2.key_dosen")
             .leftJoin({ u: "users" }, "s.NIM", "u.Nomor_Induk");
@@ -528,7 +558,8 @@ async function viewFormSubmission(req, res) {
               "s.Submission_ID",
               "u.Name as Nama",
               "s.NIM",
-              "s.Bidang_kajian",
+              "bk.descr as Bidang_kajian",
+              "ss.descr as Skema_skripsi",
               "s.Judul_skripsi",
               "s.Judul_sebelum",
               "p1.nama as Penguji1",
@@ -536,10 +567,11 @@ async function viewFormSubmission(req, res) {
               "p3.nama as Penguji3",
               "pa.nama as PA",
               "s.Bukti_approval",
-              "s.Skema_skripsi",
               "s.Timestamps",
               "s.Link_google"
             )
+            .leftJoin({ bk: "bidang_kajian" }, "s.Bidang_kajian", "bk.id")
+            .leftJoin({ ss: "skema_skripsi" }, "s.Skema_skripsi", "ss.id")
             .leftJoin({ p1: "dosen_pembimbing" }, "s.Penguji1", "p1.key_dosen")
             .leftJoin({ p2: "dosen_pembimbing" }, "s.Penguji2", "p2.key_dosen")
             .leftJoin({ p3: "dosen_pembimbing" }, "s.Penguji3", "p3.key_dosen")
@@ -567,8 +599,8 @@ async function viewFormSubmission(req, res) {
               "s.Submission_ID",
               "u.Name as Nama",
               "s.NIM",
-              "s.Bidang_kajian",
-              "s.Skema_skripsi",
+              "bk.descr as Bidang_kajian",
+              "ss.descr as Skema_skripsi",
               "p1.nama as Penguji1",
               "p2.nama as Penguji2",
               "p3.nama as Penguji3",
@@ -578,6 +610,8 @@ async function viewFormSubmission(req, res) {
               "s.Link_Video_presentasi",
               "s.Timestamps"
             )
+            .leftJoin({ bk: "bidang_kajian" }, "s.Bidang_kajian", "bk.id")
+            .leftJoin({ ss: "skema_skripsi" }, "s.Skema_skripsi", "ss.id")
             .leftJoin({ p1: "dosen_pembimbing" }, "s.Penguji1", "p1.key_dosen")
             .leftJoin({ p2: "dosen_pembimbing" }, "s.Penguji2", "p2.key_dosen")
             .leftJoin({ p3: "dosen_pembimbing" }, "s.Penguji3", "p3.key_dosen")

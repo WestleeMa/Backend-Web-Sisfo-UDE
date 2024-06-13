@@ -93,7 +93,7 @@ async function addOrEditInfo(req, res) {
       Photos = req.file?.filename;
     }
 
-    if (!Title || !Description) {
+    if ((!Title && aoe === "Add") || (!Description && aoe === "Add")) {
       if (req.file)
         fs.unlinkSync(path.join(__dirname, "../../uploads", Photos));
       return res.status(400).send("Tolong lengkapi form.");
@@ -108,10 +108,10 @@ async function addOrEditInfo(req, res) {
       Photos,
     };
 
-    if (aoe === "add") {
+    if (aoe === "Add") {
       updateOrinsert("infos", data);
       res.send("Berhasil Menambahkan Informasi");
-    } else if (aoe === "edit") {
+    } else if (aoe === "Edit") {
       if (Info_ID) {
         updateOrinsert("infos", data, Info_ID);
         res.send("Berhasil Memperbarui Informasi");
