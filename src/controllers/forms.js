@@ -7,22 +7,40 @@ const storage = require("../middleware/storageMiddleware");
 
 const upload = multer({ storage });
 
-async function approval_dosen(req,res){
-  try{
-    const {
-      NIM,
-      formID
-    } = req.params
-
-    if(NIM && formID){
-      if(formID === 1){
-        updateOrinsert()
+async function approval_dosen(req, res) {
+  try {
+    const { NIM, formID, approval } = req.body;
+    if (NIM && formID && approval) {
+      let tableName;
+      if (formID === 1) {
+        tableName = "pengajuan_judul";
+      } else if (formID === 2) {
+        tableName = "pendaftaran_thesis_proposal";
+      } else if (formID === 4) {
+        tableName = "pendaftaran_sidang_skripsi";
+      } else {
+        res.status(400).send("Wrong Id" + formID);
       }
-    }else {
-      res.status(400).send("Incomplete Request (no NIM or formID)")
+      if (tableName) {
+        const dbresponse = await updateOrinsert(
+          tableName,
+          { ...approval },
+          NIM
+        );
+        if (dbresponse === 1) {
+          res.send("Updated");
+        } else {
+          res.send("Failed to update, check the id or approval column names");
+        }
+      }
+    } else {
+      res
+        .status(400)
+        .send("Incomplete Request (no NIM or formID or Approval Status)");
     }
+  } catch (error) {
+    console.error(error);
   }
-  catch(error){console.error(error)}
 }
 //Pengajuan Judul dan Dosen Pembimbing Skripsi
 async function form1(req, res) {
@@ -456,9 +474,12 @@ async function viewFormSubmission(req, res) {
               "ss.descr as Skema_skripsi",
               "s.Judul_skripsi",
               "s.Judul_sebelum",
+              "s.form_approval",
               "s.Dospem_sebelum",
               "d1.Nama as Dospem1",
               "d2.Nama as Dospem2",
+              "s.approval_dosen1",
+              "s.approval_dosen2",
               "s.Draft_naskah",
               "s.Timestamps"
             )
@@ -558,6 +579,9 @@ async function viewFormSubmission(req, res) {
               "s.Judul_skripsi",
               "s.Judul_sebelum",
               "s.Dospem_sebelum",
+              "s.approval_dosen1",
+              "s.form_approval",
+              "s.approval_dosen2",
               "d1.Nama as Dospem1",
               "d2.Nama as Dospem2",
               "s.Draft_naskah",
@@ -795,4 +819,5 @@ module.exports = {
   delForm4,
   viewFormSubmission,
   downloadFiles,
+  approval_dosen,
 };

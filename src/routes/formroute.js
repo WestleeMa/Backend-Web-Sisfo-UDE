@@ -11,6 +11,7 @@ const {
   delForm4,
   viewFormSubmission,
   downloadFiles,
+  approval_dosen,
 } = require("../controllers/forms");
 
 router.get("/download/:formID", downloadFiles);
@@ -19,6 +20,7 @@ router.post("/1", form1);
 router.post("/2", form2);
 router.post("/3", form3);
 router.post("/4", form4);
+router.post("/approve", approval_dosen);
 router.delete("/1", delForm1);
 router.delete("/2", delForm2);
 router.delete("/3", delForm3);
