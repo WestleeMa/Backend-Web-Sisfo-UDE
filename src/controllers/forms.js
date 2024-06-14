@@ -7,6 +7,23 @@ const storage = require("../middleware/storageMiddleware");
 
 const upload = multer({ storage });
 
+async function approval_dosen(req,res){
+  try{
+    const {
+      NIM,
+      formID
+    } = req.params
+
+    if(NIM && formID){
+      if(formID === 1){
+        updateOrinsert()
+      }
+    }else {
+      res.status(400).send("Incomplete Request (no NIM or formID)")
+    }
+  }
+  catch(error){console.error(error)}
+}
 //Pengajuan Judul dan Dosen Pembimbing Skripsi
 async function form1(req, res) {
   try {
