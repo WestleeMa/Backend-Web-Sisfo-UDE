@@ -22,9 +22,23 @@ async function approval_dosen(req, res) {
         res.status(400).send("Wrong Id" + formID);
       }
       if (tableName) {
+        const {
+          approval_dosen1,
+          approval_dosen2,
+          approval_dosen3,
+          approval_dosen4,
+          form_approval,
+        } = approval;
+
         const dbresponse = await updateOrinsert(
           tableName,
-          { ...approval },
+          {
+            approval_dosen1,
+            approval_dosen2,
+            approval_dosen3,
+            approval_dosen4,
+            form_approval,
+          },
           NIM
         );
         if (dbresponse === 1) {
@@ -504,6 +518,11 @@ async function viewFormSubmission(req, res) {
               "p1.nama as Penguji1",
               "p2.nama as Penguji2",
               "p3.nama as Penguji3",
+              "s.approval_dosen1",
+              "s.approval_dosen2",
+              "s.approval_dosen3",
+              "s.approval_dosen4",
+              "s.form_approval",
               "pa.nama as PA",
               "s.Bukti_approval",
               "s.Timestamps",
@@ -548,6 +567,11 @@ async function viewFormSubmission(req, res) {
               "p2.nama as Penguji2",
               "p3.nama as Penguji3",
               "pa.nama as PA",
+              "s.approval_dosen1",
+              "s.approval_dosen2",
+              "s.approval_dosen3",
+              "s.approval_dosen4",
+              "s.form_approval",
               "s.Bukti_approval",
               "s.Link_Google_docs",
               "s.Link_Video_presentasi",
@@ -607,6 +631,11 @@ async function viewFormSubmission(req, res) {
               "p2.nama as Penguji2",
               "p3.nama as Penguji3",
               "pa.nama as PA",
+              "s.approval_dosen1",
+              "s.approval_dosen2",
+              "s.approval_dosen3",
+              "s.approval_dosen4",
+              "s.form_approval",
               "s.Bukti_approval",
               "s.Timestamps",
               "s.Link_google"
@@ -646,6 +675,11 @@ async function viewFormSubmission(req, res) {
               "p2.nama as Penguji2",
               "p3.nama as Penguji3",
               "pa.nama as PA",
+              "s.approval_dosen1",
+              "s.approval_dosen2",
+              "s.approval_dosen3",
+              "s.approval_dosen4",
+              "s.form_approval",
               "s.Bukti_approval",
               "s.Link_Google_docs",
               "s.Link_Video_presentasi",
