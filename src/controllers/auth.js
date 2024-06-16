@@ -183,6 +183,12 @@ async function updateUser(req, res) {
                 fs.unlinkSync(path.join(__dirname, "../../uploads", Photo));
               res.status(500).send("Error: " + err);
             } else {
+              if (Photo) {
+                if (checkUser.Photo)
+                  fs.unlinkSync(
+                    path.join(__dirname, "../../uploads", checkUser.Photo)
+                  );
+              }
               await db("users").where({ Nomor_Induk }).update({
                 Name,
                 Extra_Desc,
@@ -195,6 +201,10 @@ async function updateUser(req, res) {
             }
           });
         } else {
+          if (Photo)
+            fs.unlinkSync(
+              path.join(__dirname, "../../uploads", checkUser.Photo)
+            );
           await db("users").where({ Nomor_Induk }).update({
             Name,
             Extra_Desc,

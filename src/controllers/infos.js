@@ -107,12 +107,18 @@ async function addOrEditInfo(req, res) {
       Description,
       Photos,
     };
-
+    const checkInfo = await db("infos").where("Info_ID", Info_ID).first();
     if (aoe === "Add") {
       updateOrinsert("infos", data);
       res.send("Berhasil Menambahkan Informasi");
     } else if (aoe === "Edit") {
       if (Info_ID) {
+        if (Photos) {
+          if (checkInfo.Photos)
+            fs.unlinkSync(
+              path.join(__dirname, "../../uploads", checkInfo.Photos)
+            );
+        }
         updateOrinsert("infos", data, Info_ID);
         res.send("Berhasil Memperbarui Informasi");
       } else {

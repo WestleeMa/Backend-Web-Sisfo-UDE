@@ -82,6 +82,16 @@ async function form1(req, res) {
       Skema_skripsi,
     } = req.body;
 
+    let mimeType;
+    let extname;
+
+    if (req.file) {
+      const fileTypes = /docx|doc/;
+      mimeType = fileTypes.test(req.file?.mimetype);
+      extname = fileTypes.test(
+        path.extname(req.file?.originalname).toLowerCase()
+      );
+    }
     if (
       !NIM ||
       !Bidang_kajian ||
@@ -94,29 +104,37 @@ async function form1(req, res) {
       console.log(req.body);
       if (req.file)
         fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
-      return res.status(400).send("Tolong lengkapi form.");
-    }
-
-    const Draft_naskah = req.file.filename;
-
-    const data = {
-      NIM,
-      Bidang_kajian,
-      Judul_skripsi,
-      Judul_sebelum,
-      Dospem_sebelum,
-      Dospem1,
-      Dospem2,
-      Skema_skripsi,
-      Draft_naskah,
-    };
-    const dbresponse = await updateOrinsert("pengajuan_judul", data, NIM);
-    if (dbresponse === 1) {
-      res.send("Berhasil Submit Pengajuan Judul dan Dosen Pembimbing Skripsi");
-    } else {
+      res.status(400).send("Tolong lengkapi form.");
+    } else if (!mimeType && !extname) {
       if (req.file)
         fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
-      res.status(400).send("Invalid Data");
+      res.status(400).send("Draft Naskah harus berformat .docx atau .doc");
+    } else {
+      const Draft_naskah = req.file?.filename;
+      const data = {
+        NIM,
+        Bidang_kajian,
+        Judul_skripsi,
+        Judul_sebelum,
+        Dospem_sebelum,
+        Dospem1,
+        Dospem2,
+        Skema_skripsi,
+        Draft_naskah,
+      };
+
+      const dbresponse = await updateOrinsert("pengajuan_judul", data, NIM);
+      if (dbresponse === 1) {
+        res.send(
+          "Berhasil Submit Pengajuan Judul dan Dosen Pembimbing Skripsi"
+        );
+      } else {
+        if (req.file)
+          fs.unlinkSync(
+            path.join(__dirname, "../../uploads", req.file.filename)
+          );
+        res.status(400).send("Invalid Data");
+      }
     }
   } catch (error) {
     console.error(error);
@@ -152,6 +170,16 @@ async function form2(req, res) {
       Link_google,
     } = req.body;
 
+    let mimeType;
+    let extname;
+
+    if (req.file) {
+      const fileTypes = /pdf|jpg|jpeg|png/;
+      mimeType = fileTypes.test(req.file?.mimetype);
+      extname = fileTypes.test(
+        path.extname(req.file?.originalname).toLowerCase()
+      );
+    }
     if (
       !NIM ||
       !Bidang_kajian ||
@@ -166,35 +194,45 @@ async function form2(req, res) {
     ) {
       if (req.file)
         fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
-      return res.status(400).send("Tolong lengkapi form.");
-    }
-
-    const Bukti_approval = req.file.filename;
-
-    const data = {
-      NIM,
-      Bidang_kajian,
-      Skema_skripsi,
-      Judul_skripsi,
-      Judul_sebelum,
-      Penguji1,
-      Penguji2,
-      Penguji3,
-      PA,
-      Link_google,
-      Bukti_approval,
-    };
-    const dbresponse = await updateOrinsert(
-      "pendaftaran_thesis_proposal",
-      data,
-      NIM
-    );
-    if (dbresponse === 1) {
-      res.send("Berhasil Submit Pendaftaran Ujian Seminar of Thesis Proposal");
-    } else {
+      res.status(400).send("Tolong lengkapi form.");
+    } else if (!mimeType && !extname) {
       if (req.file)
         fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
-      res.status(400).send("Invalid Data");
+      res
+        .status(400)
+        .send("Bukti Approval hanya dibolehkan .pdf, .jpg, .jpeg, dan .png");
+    } else {
+      const Bukti_approval = req.file.filename;
+
+      const data = {
+        NIM,
+        Bidang_kajian,
+        Skema_skripsi,
+        Judul_skripsi,
+        Judul_sebelum,
+        Penguji1,
+        Penguji2,
+        Penguji3,
+        PA,
+        Link_google,
+        Bukti_approval,
+      };
+      const dbresponse = await updateOrinsert(
+        "pendaftaran_thesis_proposal",
+        data,
+        NIM
+      );
+      if (dbresponse === 1) {
+        res.send(
+          "Berhasil Submit Pendaftaran Ujian Seminar of Thesis Proposal"
+        );
+      } else {
+        if (req.file)
+          fs.unlinkSync(
+            path.join(__dirname, "../../uploads", req.file.filename)
+          );
+        res.status(400).send("Invalid Data");
+      }
     }
   } catch (error) {
     console.error(error);
@@ -327,6 +365,17 @@ async function form4(req, res) {
       Link_Video_presentasi,
     } = req.body;
 
+    let mimeType;
+    let extname;
+
+    if (req.file) {
+      const fileTypes = /pdf|jpg|jpeg|png/;
+      mimeType = fileTypes.test(req.file?.mimetype);
+      extname = fileTypes.test(
+        path.extname(req.file?.originalname).toLowerCase()
+      );
+    }
+
     if (
       !NIM ||
       !Judul_skripsi ||
@@ -343,34 +392,42 @@ async function form4(req, res) {
       if (req.file)
         fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
       return res.status(400).send("Tolong lengkapi form.");
-    }
-
-    const Bukti_approval = req.file.filename;
-
-    const data = {
-      NIM,
-      Judul_skripsi,
-      Bidang_kajian,
-      Skema_skripsi,
-      Penguji1,
-      Penguji2,
-      Penguji3,
-      PA,
-      Link_Google_docs,
-      Link_Video_presentasi,
-      Bukti_approval,
-    };
-    const dbresponse = await updateOrinsert(
-      "pendaftaran_sidang_skripsi",
-      data,
-      NIM
-    );
-    if (dbresponse === 1) {
-      res.send("Berhasil Submit Pendaftaran Sidang Skripsi");
-    } else {
+    } else if (!mimeType && !extname) {
       if (req.file)
         fs.unlinkSync(path.join(__dirname, "../../uploads", req.file.filename));
-      res.status(400).send("Invalid Data");
+      res
+        .status(400)
+        .send("Bukti Approval hanya dibolehkan .pdf, .jpg, .jpeg, dan .png");
+    } else {
+      const Bukti_approval = req.file.filename;
+
+      const data = {
+        NIM,
+        Judul_skripsi,
+        Bidang_kajian,
+        Skema_skripsi,
+        Penguji1,
+        Penguji2,
+        Penguji3,
+        PA,
+        Link_Google_docs,
+        Link_Video_presentasi,
+        Bukti_approval,
+      };
+      const dbresponse = await updateOrinsert(
+        "pendaftaran_sidang_skripsi",
+        data,
+        NIM
+      );
+      if (dbresponse === 1) {
+        res.send("Berhasil Submit Pendaftaran Sidang Skripsi");
+      } else {
+        if (req.file)
+          fs.unlinkSync(
+            path.join(__dirname, "../../uploads", req.file.filename)
+          );
+        res.status(400).send("Invalid Data");
+      }
     }
   } catch (error) {
     console.error(error);
@@ -383,6 +440,17 @@ async function updateOrinsert(table, data, NIM) {
     const existingRecord = await db(table).where({ NIM }).first();
 
     if (existingRecord) {
+      if (data.Draft_naskah) {
+        if (existingRecord.Draft_naskah)
+          fs.unlinkSync(
+            path.join(__dirname, "../../uploads", existingRecord.Draft_naskah)
+          );
+      } else if (data.Bukti_approval) {
+        if (existingRecord.Bukti_approval)
+          fs.unlinkSync(
+            path.join(__dirname, "../../uploads", existingRecord.Bukti_approval)
+          );
+      }
       await db(table).where({ NIM }).update(data);
     } else {
       await db(table).insert(data);
